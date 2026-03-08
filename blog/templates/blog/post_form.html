@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Personal Blog{% endblock %}
+
+{% block content %}
+<div class="post-form-container">
+    <div class="form-card">
+        <h1>{{ title }}</h1>
+        <p class="form-description">
+            {% if 'Edit' in title %}
+            Update your blog post with new information
+            {% else %}
+            Share your thoughts and ideas with the world
+            {% endif %}
+        </p>
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" class="post-form">
+            {% csrf_token %}
+
+            <!-- Title Field -->
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">📝 Post Title</label>
+                {{ form.title }}
+                <small class="form-help">Catchy title (5-300 characters)</small>
+                {% if form.title.errors %}
+                <div class="form-error">
+                    {% for error in form.title.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Category Field -->
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">📂 Category</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                <div class="form-error">
+                    {% for error in form.category.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Content Field -->
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">✍️ Post Content</label>
+                {{ form.content }}
+                <small class="form-help">Write your main content (minimum 50 characters)</small>
+                {% if form.content.errors %}
+                <div class="form-error">
+                    {% for error in form.content.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Image Field -->
+            <div class="form-group">
+                <label for="{{ form.image.id_for_label }}">🖼️ Featured Image (Optional)</label>
+                {{ form.image }}
+                <small class="form-help">Upload a featured image for your post (JPEG, PNG, etc.)</small>
+                {% if form.image.errors %}
+                <div class="form-error">
+                    {% for error in form.image.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Show current image if editing -->
+                {% if form.instance.image %}
+                <div class="current-image">
+                    <p><strong>Current Image:</strong></p>
+                    <img src="{{ form.instance.image.url }}" alt="Featured Image" style="max-width: 200px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="image-clear" id="image-clear">
+                        Remove image
+                    </label>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Publish Status Field -->
+            <div class="form-group checkbox-group">
+                <label for="{{ form.is_published.id_for_label }}" class="checkbox-label">
+                    {{ form.is_published }}
+                    Publish This Post
+                </label>
+                <small class="form-help">Uncheck to save as draft</small>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    {% if 'Edit' in title %}
+                    💾 Update Post
+                    {% else %}
+                    🚀 Publish Post
+                    {% endif %}
+                </button>
+                <a href="{% url 'blog:post_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+        </form>
+
+        <!-- Tips Section -->
+        <div class="form-tips">
+            <h3>💡 Writing Tips</h3>
+            <ul>
+                <li><strong>Clear Title:</strong> Make it descriptive and interesting</li>
+                <li><strong>Good Content:</strong> Write at least 50 characters for quality posts</li>
+                <li><strong>Featured Image:</strong> Helps posts stand out in the list</li>
+                <li><strong>Category:</strong> Choose the right category for better organization</li>
+                <li><strong>Draft Save:</strong> Uncheck "Publish" to save as draft first</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

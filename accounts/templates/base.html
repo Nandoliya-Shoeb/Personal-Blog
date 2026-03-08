@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Personal Blog - Authentication{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">📝</span>
+                Personal Blog
+            </a>
+
+            <div class="nav-menu">
+                <!-- Blog Link (always visible) -->
+                <a href="{% url 'blog:post_list' %}" class="nav-link">📚 Blog</a>
+
+                {% if user.is_authenticated %}
+                <!-- Logged in user menu -->
+                {% if user.is_staff %}
+                <!-- Admin user menu -->
+                <a href="{% url 'admin_dashboard' %}" class="nav-link" style="color: #f59e0b; font-weight: bold;">
+                    ⚙️ Admin Dashboard
+                </a>
+                {% endif %}
+
+                <div class="nav-dropdown" style="position: relative; display: inline-block;">
+                    <a href="javascript:void(0)" class="nav-link nav-dropdown-toggle"
+                        onclick="document.getElementById('userDropdown').classList.toggle('show')">
+                        Welcome, {{ user.first_name|default:user.username }} ▾
+                    </a>
+                    <div id="userDropdown" class="nav-dropdown-menu dropdown-content">
+                        <a href="{% url 'blog:my_posts' %}" class="dropdown-item">My Posts</a>
+                        <a href="{% url 'accounts:profile' %}" class="dropdown-item">Profile</a>
+                        <a href="{% url 'accounts:change_password' %}" class="dropdown-item">Change Password</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'accounts:logout' %}" class="dropdown-item text-danger">Logout</a>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Not logged in menu -->
+                <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>
+                <a href="{% url 'accounts:register' %}" class="nav-link nav-register">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+            {{ message }}
+            <button class="message-close" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Page Content -->
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Personal Blog. All rights reserved.</p>
+    </footer>
+
+    <script src="{% static 'js/script.js' %}"></script>
+    <script>
+        // Close dropdowns if clicked outside
+        document.addEventListener('click', function (event) {
+            if (!event.target.matches('.nav-dropdown-toggle')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

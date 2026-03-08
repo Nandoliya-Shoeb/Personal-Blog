@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog Posts - Personal Blog{% endblock %}
+
+{% block content %}
+<div class="blog-container">
+    <!-- Header Section -->
+    <div class="blog-header">
+        <h1>📚 Blog Posts</h1>
+        <p>Discover interesting stories and ideas</p>
+
+        {% if user.is_authenticated %}
+        <div class="blog-actions">
+            <a href="{% url 'blog:create_post' %}" class="btn btn-primary">✍️ Write New Post</a>
+            <a href="{% url 'blog:my_posts' %}" class="btn btn-secondary">📝 My Posts</a>
+        </div>
+        {% else %}
+        <p class="login-prompt">
+            <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login to Write Posts</a>
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="blog-main">
+        <!-- Sidebar -->
+        <aside class="blog-sidebar">
+            <!-- Search Form -->
+            <div class="sidebar-section">
+                <h3>🔍 Search Posts</h3>
+                <form method="get" class="search-form">
+                    {{ search_form.query }}
+                    <button type="submit" class="btn btn-small btn-primary">Search</button>
+                </form>
+                {% if query %}
+                <p class="search-info">Showing results for "<strong>{{ query }}</strong>"</p>
+                <a href="{% url 'blog:post_list' %}" class="btn btn-small btn-secondary">Clear Search</a>
+                {% endif %}
+            </div>
+
+            <!-- Categories -->
+            <div class="sidebar-section">
+                <h3>📂 Categories</h3>
+                <div class="categories-list">
+                    <a href="{% url 'blog:post_list' %}"
+                        class="category-item {% if not request.GET.category %}active{% endif %}">
+                        All Posts <span class="count">({{ total_posts }})</span>
+                    </a>
+                    {% for category in categories %}
+                    <a href="{{ category.get_absolute_url }}" class="category-item">
+                        {{ category.name }}
+                        <span class="count">({{ category.posts.count }})</span>
+                    </a>
+                    {% empty %}
+                    <p class="no-data">No categories yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="blog-content">
+            {% if posts %}
+            <!-- Posts Grid -->
+            <div class="posts-grid">
+                {% for post in posts %}
+                <article class="post-card">
+                    <!-- Post Image -->
+                    {% if post.image %}
+                    <div class="post-image">
+                        <img src="{{ post.image.url }}" alt="{{ post.title }}">
+                    </div>
+                    {% else %}
+                    <div class="post-image placeholder">
+                        📄
+                    </div>
+                    {% endif %}
+
+                    <!-- Post Info -->
+                    <div class="post-content">
+                        <span class="post-category">{{ post.category.name|default:"Uncategorized" }}</span>
+
+                        <h2 class="post-title">
+                            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                        </h2>
+
+                        <p class="post-excerpt">{{ post.short_content }}</p>
+
+                        <!-- Post Meta -->
+                        <div class="post-meta">
+                            <span class="meta-item">
+                                👤 {{ post.author.get_full_name|default:post.author.username }}
+                            </span>
+                            <span class="meta-item">
+                                📅 {{ post.created_at|date:"M d, Y" }}
+                            </span>
+                            <span class="meta-item">
+                                👁️ {{ post.views_count }}
+                            </span>
+                            <span class="meta-item">
+                                💬 {{ post.comments_count }}
+                            </span>
+                        </div>
+
+                        <!-- Read More Button -->
+                        <a href="{{ post.get_absolute_url }}" class="btn btn-small btn-primary">
+                            Read More →
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav class="pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}" class="btn btn-small">« First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                    class="btn btn-small">‹ Previous</a>
+                {% endif %}
+
+                <span class="page-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}"
+                    class="btn btn-small">Next ›</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}"
+                    class="btn btn-small">Last »</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+            {% else %}
+            <!-- No Posts Message -->
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h2>No Posts Found</h2>
+                <p>
+                    {% if query %}
+                    No posts match your search for "<strong>{{ query }}</strong>"
+                    {% else %}
+                    No blog posts yet. Check back soon!
+                    {% endif %}
+                </p>
+                {% if query %}
+                <a href="{% url 'blog:post_list' %}" class="btn btn-primary">View All Posts</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

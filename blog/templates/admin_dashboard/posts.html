@@ -1,0 +1,186 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Posts Management - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="fas fa-newspaper"></i> Posts Management</h2>
+        <p class="text-muted">Create and manage your blog posts</p>
+    </div>
+    <div>
+        <a href="{% url 'blog:create_post' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Post
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- SEARCH AND FILTERS -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search posts..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
+                        <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- POSTS TABLE -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Views</th>
+                        <th>Comments</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in posts %}
+                        <tr class="post-row" data-post-id="{{ post.id }}">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if post.image %}
+                                        <img src="{{ post.image.url }}" alt="{{ post.title }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                    {% else %}
+                                        <div style="width: 40px; height: 40px; background-color: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ post.title|truncatewords:8 }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ post.slug }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ post.author.username }}</span>
+                            </td>
+                            <td>
+                                {% if post.category %}
+                                    <span class="badge bg-info">{{ post.category.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if post.is_published %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Published</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-edit"></i> Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span><i class="fas fa-eye"></i> {{ post.views_count }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ post.comments.count }}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ post.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'admin_post_edit' post.id %}" class="btn btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'admin_post_publish' post.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="{% if post.is_published %}draft{% else %}publish{% endif %}">
+                                        <button type="submit" class="btn btn-outline-secondary" title="{% if post.is_published %}Make Draft{% else %}Publish{% endif %}">
+                                            <i class="fas fa-{% if post.is_published %}pause{% else %}play{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'admin_post_delete' post.id %}" style="display: inline;" onsubmit="return confirm('Delete this post?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="fas fa-inbox" style="font-size: 2em; margin-bottom: 10px;"></i>
+                                <p>No posts found</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- PAGINATION -->
+    {% if posts.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if posts.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ posts.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in posts.paginator.page_range %}
+                    {% if posts.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > posts.number|add:'-3' and num < posts.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if posts.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ posts.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ posts.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if status %}&status={{ status }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<style>
+    .post-row {
+        transition: all 0.3s ease;
+    }
+    
+    .post-row:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+</style>
+{% endblock %}

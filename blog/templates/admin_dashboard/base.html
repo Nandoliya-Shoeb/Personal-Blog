@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Personal Blog Admin Dashboard{% endblock %}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="{% static 'css/admin_dashboard.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="d-flex">
+        <!-- SIDEBAR NAVIGATION -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h5 class="mb-0">📚 Blog Admin</h5>
+                <button class="btn-close-sidebar" id="sidebarToggle">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <ul class="nav flex-column sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'posts' %}active{% endif %}" href="{% url 'admin_posts' %}">
+                        <i class="fas fa-newspaper"></i> Posts
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'categories' %}active{% endif %}" href="{% url 'admin_categories' %}">
+                        <i class="fas fa-folder-open"></i> Categories
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'comments' %}active{% endif %}" href="{% url 'admin_comments' %}">
+                        <i class="fas fa-comments"></i> Comments
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'users' %}active{% endif %}" href="{% url 'admin_users' %}">
+                        <i class="fas fa-users"></i> Users
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link {% if page == 'analytics' %}active{% endif %}" href="{% url 'admin_analytics' %}">
+                        <i class="fas fa-chart-bar"></i> Analytics
+                    </a>
+                </li>
+                
+                <hr class="sidebar-divider">
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'blog:post_list' %}">
+                        <i class="fas fa-eye"></i> View Blog
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <form action="{% url 'accounts:logout' %}" method="post" style="width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </nav>
+        
+        <!-- MAIN CONTENT -->
+        <div class="main-content flex-grow-1">
+            <!-- TOP NAVBAR -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-secondary" id="sidebarToggleBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    
+                    <div class="ms-auto d-flex align-items-center gap-3">
+                        <!-- Search Bar -->
+                        <div class="search-box d-none d-md-block">
+                            <input type="search" class="form-control form-control-sm" placeholder="Search...">
+                        </div>
+                        
+                        <!-- Notifications -->
+                        <button class="btn btn-outline-secondary position-relative">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">3</span>
+                        </button>
+                        
+                        <!-- User Profile Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ request.user.username }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                    <i class="fas fa-user"></i> Profile
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><form action="{% url 'accounts:logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt"></i> Logout
+                                    </button>
+                                </form></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- PAGE CONTENT -->
+            <div class="page-content">
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="container-fluid mb-4">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Page Header -->
+                <div class="page-header">
+                    {% block page_header %}{% endblock %}
+                </div>
+                
+                <!-- Page Body -->
+                {% block content %}{% endblock %}
+            </div>
+            
+            <!-- FOOTER -->
+            <footer class="bg-light text-center py-3 border-top">
+                <p class="text-muted mb-0">
+                    © 2024 Personal Blog Management System. All rights reserved.
+                </p>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'js/admin_dashboard.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

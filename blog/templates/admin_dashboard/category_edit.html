@@ -1,0 +1,62 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Edit Category - Admin Panel{% endblock %}
+
+{% block page_header %}
+<h2><i class="fas fa-edit"></i> Edit Category</h2>
+<p class="text-muted">{{ category.name }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Category Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ category.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ category.description }}</textarea>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{% url 'admin_categories' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Category Info</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        <strong>Posts:</strong> {{ category.post_count }}
+                    </p>
+                    <p>
+                        <strong>Slug:</strong> <code>{{ category.slug }}</code>
+                    </p>
+                    <p>
+                        <strong>Created:</strong> {{ category.created_at|date:"M d, Y" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - Personal Blog{% endblock %}
+
+{% block content %}
+<div class="post-detail-container">
+    <!-- Post Header -->
+    <header class="post-header">
+        <!-- Post Image -->
+        {% if post.image %}
+            <div class="post-featured-image">
+                <img src="{{ post.image.url }}" alt="{{ post.title }}">
+            </div>
+        {% else %}
+            <div class="post-featured-image placeholder">
+                📄
+            </div>
+        {% endif %}
+
+        <!-- Post Title & Meta -->
+        <div class="post-header-content">
+            <nav class="breadcrumb">
+                <a href="{% url 'blog:post_list' %}">Blog</a>
+                {% if post.category %}
+                    <a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>
+                {% endif %}
+                <span>{{ post.title }}</span>
+            </nav>
+
+            <h1 class="post-title">{{ post.title }}</h1>
+
+            <!-- Post Meta Information -->
+            <div class="post-meta-info">
+                <div class="meta-left">
+                    <span class="author">
+                        👤 By <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                    </span>
+                    <span class="date">
+                        📅 {{ post.created_at|date:"F d, Y \a\t g:i A" }}
+                    </span>
+                    {% if post.updated_at != post.created_at %}
+                        <span class="updated">
+                            ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="meta-right">
+                    <span class="views">👁️ {{ post.views_count }} views</span>
+                    <span class="comments">💬 {{ post.comments_count }} comments</span>
+                </div>
+            </div>
+
+            <!-- Post Actions (Edit/Delete for Author) -->
+            {% if can_edit or can_delete %}
+                <div class="post-actions">
+                    {% if can_edit %}
+                        <a href="{% url 'blog:edit_post' post.slug %}" class="btn btn-secondary">✏️ Edit Post</a>
+                    {% endif %}
+                    {% if can_delete %}
+                        <a href="{% url 'blog:delete_post' post.slug %}" class="btn btn-danger">🗑️ Delete Post</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="post-main">
+        <!-- Post Content -->
+        <article class="post-body">
+            {{ post.content|linebreaks }}
+        </article>
+
+        <!-- Post Footer -->
+        <footer class="post-footer">
+            <div class="post-category-badge">
+                <span class="badge">📂 {{ post.category.name|default:"Uncategorized" }}</span>
+            </div>
+
+            <div class="post-author-card">
+                <h3>About the Author</h3>
+                <div class="author-info">
+                    <div class="author-avatar">👤</div>
+                    <div class="author-details">
+                        <h4>{{ post.author.get_full_name|default:post.author.username }}</h4>
+                        <p>{{ post.author.email }}</p>
+                        <p class="member-since">Member since {{ post.author.date_joined|date:"M Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Comments Section -->
+    <section class="comments-section">
+        <h2>💬 Comments ({{ post.comments_count }})</h2>
+
+        <!-- Add Comment Form -->
+        {% if user.is_authenticated %}
+            <div class="add-comment-form">
+                <h3>Leave a Comment</h3>
+                <form method="post" action="{% url 'blog:add_comment' post.slug %}">
+                    {% csrf_token %}
+                    {{ comment_form.content }}
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="login-to-comment">
+                <p>Want to comment? <a href="{% url 'accounts:login' %}" class="link">Login here</a> or <a href="{% url 'accounts:register' %}" class="link">create an account</a></p>
+            </div>
+        {% endif %}
+
+        <!-- Comments List -->
+        {% if comments %}
+            <div class="comments-list">
+                {% for comment in comments %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <strong class="comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                            <span class="comment-date">{{ comment.created_at|date:"M d, Y \a\t g:i A" }}</span>
+                        </div>
+                        <div class="comment-content">
+                            {{ comment.content|linebreaks }}
+                        </div>
+                        
+                        <!-- Delete Comment Button (Author or Admin) -->
+                        {% if user == comment.author or user.is_staff %}
+                            <div class="comment-actions">
+                                <a href="{% url 'blog:delete_comment' comment.id %}" class="btn btn-small btn-danger">
+                                    Delete
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-comments">
+                <p>No comments yet. Be the first to comment!</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- Related Posts -->
+    {% if post.category.posts.count > 1 %}
+        <section class="related-posts">
+            <h2>📚 More from {{ post.category.name }}</h2>
+            <div class="posts-grid">
+                {% for related_post in post.category.posts.all|slice:":3" %}
+                    {% if related_post.id != post.id %}
+                        <article class="post-card">
+                            {% if related_post.image %}
+                                <div class="post-image">
+                                    <img src="{{ related_post.image.url }}" alt="{{ related_post.title }}">
+                                </div>
+                            {% else %}
+                                <div class="post-image placeholder">📄</div>
+                            {% endif %}
+                            
+                            <div class="post-content">
+                                <h3 class="post-title">
+                                    <a href="{{ related_post.get_absolute_url }}">{{ related_post.title }}</a>
+                                </h3>
+                                <p class="post-excerpt">{{ related_post.short_content }}</p>
+                                <a href="{{ related_post.get_absolute_url }}" class="btn btn-small btn-primary">
+                                    Read More →
+                                </a>
+                            </div>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

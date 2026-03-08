@@ -1,0 +1,140 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block title %}Comments Moderation - Admin Panel{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="fas fa-comments"></i> Comments Moderation</h2>
+        <p class="text-muted">Review and approve user comments</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- FILTERS -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="d-flex gap-2">
+                <select name="status" class="form-select" onchange="this.form.submit()">
+                    <option value="">All Comments</option>
+                    <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </form>
+        </div>
+    </div>
+    
+    <!-- COMMENTS LIST -->
+    <div class="space-y-3">
+        {% for comment in comments %}
+            <div class="card comment-card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-0 font-weight-bold">{{ comment.author.username }}</h6>
+                            <small class="text-muted">on "{{ comment.post.title }}"</small>
+                        </div>
+                        <div>
+                            {% if comment.is_approved %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Approved</span>
+                            {% else %}
+                                <span class="badge bg-warning"><i class="fas fa-hourglass-half"></i> Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-light mb-3" style="border-left: 4px solid #6366f1;">
+                        <p class="mb-0">{{ comment.content }}</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> {{ comment.created_at|date:"M d, Y at H:i" }}
+                        </small>
+                        
+                        <div class="btn-group btn-group-sm" role="group">
+                            {% if not comment.is_approved %}
+                                <form method="post" action="{% url 'admin_comment_approve' comment.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            {% if comment.is_approved %}
+                                <form method="post" action="{% url 'admin_comment_reject' comment.id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            <form method="post" action="{% url 'admin_comment_delete' comment.id %}" style="display: inline;" onsubmit="return confirm('Delete this comment?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-inbox"></i> No comments to moderate
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- PAGINATION -->
+    {% if comments.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if comments.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if status %}&status={{ status }}{% endif %}">First</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ comments.previous_page_number }}{% if status %}&status={{ status }}{% endif %}">Previous</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in comments.paginator.page_range %}
+                    {% if comments.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > comments.number|add:'-3' and num < comments.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if comments.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ comments.next_page_number }}{% if status %}&status={{ status }}{% endif %}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ comments.paginator.num_pages }}{% if status %}&status={{ status }}{% endif %}">Last</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<style>
+    .comment-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+    }
+    
+    .comment-card:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-color: #6366f1;
+    }
+</style>
+{% endblock %}

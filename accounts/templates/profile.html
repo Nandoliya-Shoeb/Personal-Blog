@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Personal Blog{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar" style="position: relative; cursor: pointer;"
+                onclick="document.getElementById('avatarMenu').classList.toggle('show')">
+                {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="Profile Avatar"
+                    style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                <span class="avatar-icon">👤</span>
+                {% endif %}
+
+                <div id="avatarMenu" class="avatar-menu">
+                    <label for="avatar-upload" class="avatar-menu-item">📸 Upload Image</label>
+                    {% if user.profile.avatar %}
+                    <a href="{{ user.profile.avatar.url }}" target="_blank" class="avatar-menu-item">👁️ View Image</a>
+                    {% endif %}
+                </div>
+            </div>
+            <h1>My Profile</h1>
+            <p class="profile-username">@{{ user.username }}</p>
+        </div>
+
+        <!-- Profile Information -->
+        <div class="profile-info-display">
+            <div class="info-section">
+                <h3>Account Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Username:</span>
+                        <span class="info-value">{{ user.username }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email:</span>
+                        <span class="info-value">{{ user.email }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Member Since:</span>
+                        <span class="info-value">{{ user.date_joined|date:"F d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="profile-edit-section">
+            <h2>Edit Profile</h2>
+            <form method="POST" class="profile-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div style="display: none;">
+                    {{ p_form.avatar }}
+                </div>
+
+                <!-- First Name Field -->
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                    {{ form.first_name }}
+                </div>
+
+                <!-- Last Name Field -->
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <div class="form-error">
+                        {% for error in form.email.errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary">Update Profile</button>
+            </form>
+        </div>
+
+        <!-- Additional Actions -->
+        <div class="profile-actions">
+            <a href="{% url 'accounts:change_password' %}" class="btn btn-secondary">Change Password</a>
+            <a href="{% url 'accounts:logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    // Auto submit form when an image is selected
+    document.addEventListener('DOMContentLoaded', function () {
+        var avatarInput = document.getElementById('avatar-upload');
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function () {
+                var form = this.closest('form');
+                if (form) { form.submit(); }
+                else { document.querySelector('.profile-form').submit(); }
+            });
+        }
+    });
+
+    // Close avatar menu if clicked outside
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.profile-avatar')) {
+            var dropdowns = document.getElementsByClassName("avatar-menu");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
