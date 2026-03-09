@@ -3,7 +3,7 @@
 // JavaScript for interactivity and UX improvements
 // ============================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Initialize all functions
     initializePasswordToggle();
     initializeFormValidation();
@@ -16,21 +16,30 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initializePasswordToggle() {
     const passwordFields = document.querySelectorAll('input[type="password"]');
-    
+
     passwordFields.forEach(field => {
+        // Create wrapper div
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'flex';
+        wrapper.style.width = '100%';
+
+        // Wrap field
+        field.parentNode.insertBefore(wrapper, field);
+        wrapper.appendChild(field);
+
         // Create toggle button
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'password-toggle';
         toggleBtn.textContent = '👁️';
         toggleBtn.setAttribute('aria-label', 'Toggle password visibility');
-        
-        // Wrap field and add button
-        field.parentElement.style.position = 'relative';
-        field.parentElement.appendChild(toggleBtn);
-        
+
+        // Add button to wrapper
+        wrapper.appendChild(toggleBtn);
+
         // Toggle visibility
-        toggleBtn.addEventListener('click', function(e) {
+        toggleBtn.addEventListener('click', function (e) {
             e.preventDefault();
             const isPassword = field.type === 'password';
             field.type = isPassword ? 'text' : 'password';
@@ -45,12 +54,12 @@ function initializePasswordToggle() {
  */
 function initializeFormValidation() {
     const forms = document.querySelectorAll('.auth-form, .profile-form');
-    
+
     forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             const inputs = form.querySelectorAll('input[required]');
             let isValid = true;
-            
+
             inputs.forEach(input => {
                 if (!input.value.trim()) {
                     isValid = false;
@@ -59,15 +68,15 @@ function initializeFormValidation() {
                     input.classList.remove('error');
                 }
             });
-            
+
             if (!isValid) {
                 e.preventDefault();
             }
         });
-        
+
         // Remove error class on input
         form.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', function() {
+            input.addEventListener('input', function () {
                 this.classList.remove('error');
             });
         });
@@ -79,12 +88,12 @@ function initializeFormValidation() {
  */
 function initializeMessageAutoClose() {
     const messages = document.querySelectorAll('.message');
-    
+
     messages.forEach(message => {
         // Auto close after 5 seconds
-        setTimeout(function() {
+        setTimeout(function () {
             message.style.animation = 'slideOut 0.3s ease-in-out forwards';
-            setTimeout(function() {
+            setTimeout(function () {
                 message.remove();
             }, 300);
         }, 5000);
@@ -95,7 +104,7 @@ function initializeMessageAutoClose() {
  * Smooth scroll behavior for links
  */
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
+    anchor.addEventListener('click', function (e) {
         const href = this.getAttribute('href');
         if (href !== '#') {
             e.preventDefault();
@@ -113,7 +122,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 function updateActiveNavLink() {
     const currentLocation = location.pathname;
     const navLinks = document.querySelectorAll('.nav-link');
-    
+
     navLinks.forEach(link => {
         if (link.getAttribute('href') === currentLocation) {
             link.classList.add('active');
@@ -135,9 +144,9 @@ if (rememberMeCheckbox) {
     if (localStorage.getItem('remember_me') === 'true') {
         rememberMeCheckbox.checked = true;
     }
-    
+
     // Save state when changed
-    rememberMeCheckbox.addEventListener('change', function() {
+    rememberMeCheckbox.addEventListener('change', function () {
         localStorage.setItem('remember_me', this.checked);
     });
 }
@@ -146,7 +155,7 @@ if (rememberMeCheckbox) {
  * Prevent multiple form submissions
  */
 document.querySelectorAll('.auth-form, .profile-form').forEach(form => {
-    form.addEventListener('submit', function() {
+    form.addEventListener('submit', function () {
         const submitBtn = this.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
