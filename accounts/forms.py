@@ -140,9 +140,13 @@ class UserProfileForm(forms.ModelForm):
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-input',
-                'placeholder': 'Email address'
+                'placeholder': 'Email address',
+                'readonly': 'readonly'
             })
         }
+
+    def clean_email(self):
+        return self.instance.email
 
 from .models import Profile
 
