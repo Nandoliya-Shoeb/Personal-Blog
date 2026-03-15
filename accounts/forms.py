@@ -50,10 +50,27 @@ class RegisterForm(UserCreationForm):
         })
 
     def clean_email(self):
-        """Check if email already exists"""
+        """Check if email is valid and doesn't already exist"""
+        from email_validator import validate_email, EmailNotValidError
+        
         email = self.cleaned_data.get('email')
+        
+        # 1. Check if it's a Google email (@gmail.com)
+        if not email.lower().endswith('@gmail.com'):
+            raise forms.ValidationError('Please enter a valid Google (@gmail.com) email address.')
+
+        # 2. Validate email structure and domain existence (MX record)
+        try:
+            valid = validate_email(email, check_deliverability=True)
+            email = valid.normalized
+        except EmailNotValidError:
+            # Catching error and showing the specific text requested by user
+            raise forms.ValidationError('Not valid email')
+            
+        # 3. Check if email is already registered in DB
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('This email is already registered.')
+            
         return email
 
 

@@ -244,7 +244,7 @@
 <script>
     // Posts Status Chart
     const ctx = document.getElementById('postsStatusChart').getContext('2d');
-    const data = {{ chart_data| safe }};
+    const data = JSON.parse('{{ chart_data|escapejs }}');
 
     new Chart(ctx, {
         type: 'doughnut',

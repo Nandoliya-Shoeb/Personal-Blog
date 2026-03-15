@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Email - Personal Blog{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 class="mb-2">Email Verification</h1>
+            <p>We've sent a secure 4-digit code to your email. Please enter it below.</p>
+        </div>
+
+        <form method="POST" class="auth-form" id="otp-form">
+            {% csrf_token %}
+
+            <div class="form-group text-center">
+                <label class="mb-2">One Time Password (OTP)</label>
+                <div class="d-flex justify-content-center gap-3 mt-2 mb-4">
+                    <input type="text" class="otp-input form-control text-center" maxlength="1" pattern="\d" required autocomplete="off">
+                    <input type="text" class="otp-input form-control text-center" maxlength="1" pattern="\d" required autocomplete="off">
+                    <input type="text" class="otp-input form-control text-center" maxlength="1" pattern="\d" required autocomplete="off">
+                    <input type="text" class="otp-input form-control text-center" maxlength="1" pattern="\d" required autocomplete="off">
+                </div>
+                <input type="hidden" name="otp" id="otp-hidden">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block">Verify Email</button>
+        </form>
+
+        <div class="auth-footer mt-4 text-center">
+            <div class="mb-2">
+                Didn't receive the code? 
+                <form action="{% url 'accounts:resend_otp' %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link p-0 m-0 align-baseline font-weight-bold" style="text-decoration: none; color: #6366f1;">Resend OTP</button>
+                </form>
+            </div>
+            <p class="text-muted mt-2 small" style="margin-bottom: 0;">Need to fix your email? <a href="{% url 'accounts:register' %}" style="color: #6366f1;">Register again</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modern Scoped Styles for OTP Inputs */
+.otp-input {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    color: #1e293b;
+    transition: all 0.2s ease-in-out;
+    background-color: #f8fafc;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+.otp-input:focus {
+    border-color: #6366f1;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    outline: none;
+    transform: translateY(-2px);
+}
+.auth-header h1 {
+    font-weight: 800;
+    color: #1e293b;
+}
+.gap-3 {
+    gap: 1rem !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.otp-input');
+    const form = document.querySelector('#otp-form');
+    const hiddenInput = document.getElementById('otp-hidden');
+
+    // Auto focus the very first input box on page load
+    if(inputs.length > 0) {
+        inputs[0].focus();
+    }
+
+    inputs.forEach((input, index) => {
+        // Automatically move to the next box upon typing a number
+        input.addEventListener('input', function(e) {
+            // Force numeric values only
+            this.value = this.value.replace(/[^0-9]/g, '');
+
+            if (this.value !== '') {
+                // Focus next input automatically if it's not the last one
+                if (index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            }
+        });
+
+        // Allow backspacing back to the previous input box seamlessly
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace') {
+                if (this.value === '') {
+                    // Backspace on empty input goes to previous input
+                    if (index > 0) {
+                        inputs[index - 1].focus();
+                        inputs[index - 1].value = '';
+                    }
+                }
+            }
+        });
+
+        // Allow users to paste a full 4-digit code anywhere
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pastedData = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+            
+            // Distribute numbers across inputs starting from the box they pasted into
+            for (let i = 0; i < pastedData.length; i++) {
+                if (index + i < inputs.length) {
+                    inputs[index + i].value = pastedData[i];
+                    // Focus the next available box
+                    if (index + i < inputs.length - 1) {
+                        inputs[index + i + 1].focus();
+                    } else {
+                        // Blur to remove focus when filled
+                        inputs[index + i].blur();
+                    }
+                }
+            }
+        });
+    });
+
+    // Populate hidden form field right before submission
+    form.addEventListener('submit', function(e) {
+        let code = '';
+        inputs.forEach(input => {
+            code += input.value;
+        });
+
+        if (code.length === 4) {
+            hiddenInput.value = code;
+        } else {
+            e.preventDefault();
+            alert('Please fill out all 4 digits of the OTP.');
+        }
+    });
+});
+</script>
+{% endblock %}

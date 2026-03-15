@@ -170,3 +170,16 @@ SOCIALACCOUNT_PROVIDERS = {
 SESSION_COOKIE_AGE = 43200
 # Expire session when the user closes their browser
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# ============================================================
+# Email Configuration (For Email Verification)
+# ============================================================
+# Always use real SMTP email (works both locally and in production)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+# ⚠️  FILL IN YOUR GMAIL BELOW  ⚠️
+EMAIL_HOST_USER = 'salimnandoliya@gmail.com'
+EMAIL_HOST_PASSWORD = 'igwb irrc mwic ftba'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

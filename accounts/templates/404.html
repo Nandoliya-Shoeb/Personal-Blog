@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 – Lost in Space 🚀</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: #06060f;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+
+  /* ── Animated nebula background ── */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 20% 30%, rgba(99,102,241,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 80% 70%, rgba(236,72,153,0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 80% 80% at 50% 50%, rgba(6,6,15,1) 0%, transparent 100%),
+      #06060f;
+  }
+
+  /* ── Canvas for stars ── */
+  #bgCanvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+  /* ── Layout ── */
+  .page {
+    position: relative; z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 3rem;
+    width: 100%; max-width: 1100px;
+    padding: 2rem;
+    height: 100vh;
+  }
+
+  /* ── Left panel: 404 info ── */
+  .left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.4);
+    border-radius: 50px;
+    padding: 0.35rem 1rem;
+    font-size: 0.8rem;
+    color: #a5b4fc;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    width: fit-content;
+  }
+  .badge span { font-size: 1rem; }
+
+  .error-num {
+    font-size: clamp(5rem, 12vw, 9rem);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, #f97316 0%, #ec4899 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(236,72,153,0.4));
+    animation: glow404 3s ease-in-out infinite alternate;
+  }
+  @keyframes glow404 {
+    from { filter: drop-shadow(0 0 20px rgba(236,72,153,0.3)); }
+    to   { filter: drop-shadow(0 0 60px rgba(99,102,241,0.6)); }
+  }
+
+  .error-title {
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+  .error-desc {
+    color: #64748b;
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 380px;
+  }
+
+  .btns { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.7rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 700; font-size: 0.92rem;
+    text-decoration: none; cursor: pointer; border: none;
+    transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
+    font-family: inherit;
+  }
+  .btn:hover { transform: translateY(-3px); }
+  .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 8px 32px rgba(99,102,241,0.6); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    color: #94a3b8;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+  /* ── Right panel: Game ── */
+  .right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; max-width: 420px;
+  }
+  .game-title {
+    font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase;
+    color: #6366f1; font-weight: 700;
+  }
+  .scores {
+    display: flex; gap: 1.2rem;
+  }
+  .score-box {
+    text-align: center;
+  }
+  .score-box .s-val {
+    font-size: 1.3rem; font-weight: 900;
+    background: linear-gradient(135deg, #f97316, #ec4899);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .score-box .s-lbl {
+    font-size: 0.6rem; color: #475569; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  #gameCanvas {
+    border-radius: 16px;
+    border: 1.5px solid rgba(99,102,241,0.35);
+    cursor: pointer;
+    display: block;
+    box-shadow:
+      0 0 0 1px rgba(99,102,241,0.1),
+      0 20px 60px rgba(0,0,0,0.6),
+      inset 0 0 60px rgba(99,102,241,0.04);
+    width: 100%; max-width: 420px;
+  }
+
+  .hint {
+    font-size: 0.72rem; color: #334155;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+  .hint b { color: #6366f1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .page { grid-template-columns: 1fr; gap: 1.2rem; padding: 1rem; height: auto; overflow-y: auto; }
+    body { overflow-y: auto; height: auto; }
+    .left { text-align: center; align-items: center; }
+    .error-desc { text-align: center; }
+    .btns { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<canvas id="bgCanvas"></canvas>
+
+<div class="page">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="badge"><span>🛸</span> Error 404</div>
+    <div class="error-num">404</div>
+    <div class="error-title">You're Lost in Space!</div>
+    <p class="error-desc">
+      The page you're looking for has drifted into deep space.
+      Don't panic — fly your rocket back home, or kill time
+      with our addictive mini game while you're here! 🚀
+    </p>
+    <div class="btns">
+      <a href="/" class="btn btn-primary">🏠 Back to Home</a>
+      <a href="javascript:history.back()" class="btn btn-ghost">← Go Back</a>
+    </div>
+  </div>
+
+  <!-- RIGHT: GAME -->
+  <div class="right">
+    <div class="game-header" style="max-width:420px; width:100%;">
+      <div class="game-title">🎮 Flappy Rocket</div>
+      <div class="scores">
+        <div class="score-box">
+          <div class="s-val" id="scoreEl">0</div>
+          <div class="s-lbl">Score</div>
+        </div>
+        <div class="score-box">
+          <div class="s-val" id="bestEl">0</div>
+          <div class="s-lbl">Best</div>
+        </div>
+      </div>
+    </div>
+    <canvas id="gameCanvas" width="420" height="380"></canvas>
+    <p class="hint"><b>Click, Tap or Space</b> to thrust · Fly through the gaps!</p>
+  </div>
+</div>
+
+<script>
+// ===============================================================
+//  BACKGROUND STARFIELD
+// ===============================================================
+(function(){
+  const bgC  = document.getElementById('bgCanvas');
+  const bgCtx = bgC.getContext('2d');
+  function resize(){ bgC.width = innerWidth; bgC.height = innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const STARS = Array.from({length:180}, ()=>({
+    x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+    r: Math.random()*1.4+0.2,
+    a: Math.random(),
+    spd: Math.random()*0.006+0.002
+  }));
+
+  function bgLoop(){
+    bgCtx.clearRect(0,0,bgC.width,bgC.height);
+    STARS.forEach(s=>{
+      s.a += s.spd;
+      const alpha = (Math.sin(s.a)*0.5+0.5)*0.8+0.1;
+      bgCtx.beginPath();
+      bgCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      bgCtx.fillStyle = `rgba(255,255,255,${alpha})`;
+      bgCtx.fill();
+    });
+    requestAnimationFrame(bgLoop);
+  }
+  bgLoop();
+})();
+
+// ===============================================================
+//  FLAPPY ROCKET GAME
+// ===============================================================
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const scoreEl = document.getElementById('scoreEl');
+const bestEl  = document.getElementById('bestEl');
+
+let best = parseInt(localStorage.getItem('fr_best')||'0',10);
+bestEl.textContent = best;
+
+// ── Game constants ──
+const GRAV       = 0.38;
+const THRUST     = -7.5;
+const PIPE_W     = 52;
+const GAP        = 115;
+const PIPE_SPD   = 2.6;
+const PIPE_INT   = 120; // frames between pipes
+
+// ── Game state ──
+let state  = 'idle'; // idle | playing | dead
+let score  = 0;
+let frame  = 0;
+let pipes  = [];
+let particles = [];
+
+// ── Rocket ──
+const rocket = { x: 90, y: H/2, vy: 0, r: 16, angle: 0 };
+
+// ── Small stars inside canvas ──
+const cStars = Array.from({length:60}, ()=>({
+  x: Math.random()*W, y: Math.random()*H,
+  r: Math.random()*1.3+0.2, spd: Math.random()*0.6+0.2
+}));
+
+// ── Input ──
+function flap(){
+  if(state==='idle' || state==='dead'){ startGame(); return; }
+  rocket.vy = THRUST;
+  // Thrust particles burst
+  for(let i=0;i<6;i++) addParticle(rocket.x - 16, rocket.y, 'thrust');
+}
+canvas.addEventListener('click', flap);
+canvas.addEventListener('touchstart', e=>{ e.preventDefault(); flap(); }, {passive:false});
+document.addEventListener('keydown', e=>{
+  if(e.code==='Space'){ e.preventDefault(); flap(); }
+});
+
+function startGame(){
+  state='playing'; score=0; frame=0; pipes=[]; particles=[];
+  rocket.x=90; rocket.y=H/2; rocket.vy=0; rocket.angle=0;
+  scoreEl.textContent='0';
+}
+
+function addParticle(x, y, type){
+  const count = type==='explosion'?18:1;
+  for(let i=0;i<count;i++){
+    const angle = type==='thrust'
+      ? Math.PI + (Math.random()-0.5)*0.8
+      : Math.random()*Math.PI*2;
+    const spd = type==='explosion' ? Math.random()*5+2 : Math.random()*3+1;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle)*spd,
+      vy: Math.sin(angle)*spd,
+      life: 1.0,
+      decay: type==='explosion' ? 0.025 : 0.06,
+      r: type==='explosion' ? Math.random()*4+2 : Math.random()*3+1,
+      color: type==='thrust'
+        ? `hsl(${30+Math.random()*40},100%,60%)`
+        : `hsl(${Math.random()*60+350},100%,60%)`
+    });
+  }
+}
+
+// ── Update ──
+function update(){
+  // Stars scroll
+  cStars.forEach(s=>{ s.x -= s.spd; if(s.x<0){ s.x=W; s.y=Math.random()*H; }});
+
+  // Particles
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12;
+    p.life-=p.decay;
+  });
+  particles=particles.filter(p=>p.life>0);
+
+  if(state!=='playing') return;
+
+  frame++;
+
+  // Physics
+  rocket.vy += GRAV;
+  rocket.y  += rocket.vy;
+  rocket.angle = Math.min(Math.max(rocket.vy * 0.04, -0.5), 0.9);
+
+  // Spawn pipe
+  if(frame % PIPE_INT === 0){
+    const top = Math.random()*(H - GAP - 80) + 30;
+    pipes.push({ x:W+PIPE_W, top, scored:false });
+  }
+
+  // Move pipes
+  pipes.forEach(p=>{ p.x -= PIPE_SPD; });
+  pipes = pipes.filter(p=>p.x > -PIPE_W - 10);
+
+  // Score + collision
+  for(const p of pipes){
+    // Score when rocket passes pipe centre
+    if(!p.scored && p.x + PIPE_W/2 < rocket.x){
+      score++;
+      p.scored = true;
+      scoreEl.textContent = score;
+      if(score > best){ best=score; bestEl.textContent=best; localStorage.setItem('fr_best',best); }
+    }
+    // Collision
+    const rx=rocket.x, ry=rocket.y, rr=rocket.r-3;
+    const pipeLeft=p.x, pipeRight=p.x+PIPE_W;
+    const topBot=p.top, botTop=p.top+GAP;
+    if(rx+rr > pipeLeft && rx-rr < pipeRight){
+      if(ry-rr < topBot || ry+rr > botTop+5){
+        die();
+        return;
+      }
+    }
+  }
+
+  // Bounds
+  if(rocket.y + rocket.r > H || rocket.y - rocket.r < 0){ die(); }
+
+  // Trail particles
+  if(frame%3===0) addParticle(rocket.x-14, rocket.y+4, 'thrust');
+}
+
+function die(){
+  state='dead';
+  addParticle(rocket.x, rocket.y, 'explosion');
+}
+
+// ── Draw ──
+function draw(){
+  // Sky gradient
+  const sky = ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#06060f');
+  sky.addColorStop(1,'#0f0828');
+  ctx.fillStyle=sky;
+  ctx.fillRect(0,0,W,H);
+
+  // Stars
+  cStars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.fill();
+  });
+
+  // Particles
+  particles.forEach(p=>{
+    ctx.globalAlpha=p.life;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.color;
+    ctx.fill();
+  });
+  ctx.globalAlpha=1;
+
+  // Pipes (neon purple)
+  pipes.forEach(p=>{
+    // Top pipe
+    drawPipe(p.x, 0, PIPE_W, p.top, true);
+    // Bottom pipe
+    drawPipe(p.x, p.top+GAP, PIPE_W, H-(p.top+GAP), false);
+  });
+
+  // Rocket
+  if(state !== 'dead' || particles.some(p=>p.life>0.5)){
+    drawRocket(rocket.x, rocket.y, rocket.angle);
+  }
+
+  // ── IDLE SCREEN ──
+  if(state==='idle'){
+    ctx.fillStyle='rgba(6,6,15,0.55)';
+    ctx.fillRect(0,0,W,H);
+    // Pulsing ring
+    const t = performance.now()/1000;
+    ctx.strokeStyle=`rgba(99,102,241,${0.3+Math.sin(t*2)*0.2})`;
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(W/2,H/2-20,50+Math.sin(t*3)*5,0,Math.PI*2);
+    ctx.stroke();
+    // Rocket preview
+    drawRocket(W/2, H/2-20, Math.sin(t)*0.2);
+    ctx.fillStyle='#f1f5f9';
+    ctx.font='bold 18px Outfit, sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText('Tap / Click / Space to launch!', W/2, H/2+48);
+    ctx.font='13px Outfit, sans-serif';
+    ctx.fillStyle='#475569';
+    ctx.fillText('Fly through the gaps without crashing', W/2, H/2+70);
+    return;
+  }
+
+  // ── SCORE mid-screen (brief flash) ──
+  if(state==='playing'){
+    // Current score big
+    ctx.fillStyle='rgba(255,255,255,0.06)';
+    ctx.font='bold 64px Outfit, sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(score, W/2, 70);
+  }
+
+  // ── DEAD SCREEN ──
+  if(state==='dead'){
+    ctx.fillStyle='rgba(6,6,15,0.72)';
+    ctx.fillRect(0,0,W,H);
+
+    // Card
+    const cx=W/2, cy=H/2;
+    ctx.fillStyle='rgba(15,12,40,0.95)';
+    roundRect(ctx, cx-130, cy-90, 260, 185, 16);
+    ctx.fill();
+    ctx.strokeStyle='rgba(99,102,241,0.5)';
+    ctx.lineWidth=1.5;
+    roundRect(ctx, cx-130, cy-90, 260, 185, 16);
+    ctx.stroke();
+
+    ctx.textAlign='center';
+    ctx.fillStyle='#f87171';
+    ctx.font='bold 22px Outfit, sans-serif';
+    ctx.fillText('💥 Crashed!', cx, cy-52);
+
+    ctx.fillStyle='#94a3b8';
+    ctx.font='14px Outfit, sans-serif';
+    ctx.fillText('Score', cx-60, cy-18);
+    ctx.fillText('Best', cx+60, cy-18);
+
+    const grad1=ctx.createLinearGradient(0,cy-10,0,cy+20);
+    grad1.addColorStop(0,'#f97316'); grad1.addColorStop(1,'#ec4899');
+    ctx.fillStyle=grad1;
+    ctx.font='bold 36px Outfit, sans-serif';
+    ctx.fillText(score, cx-60, cy+18);
+
+    const grad2=ctx.createLinearGradient(0,cy-10,0,cy+20);
+    grad2.addColorStop(0,'#6366f1'); grad2.addColorStop(1,'#8b5cf6');
+    ctx.fillStyle=grad2;
+    ctx.fillText(best, cx+60, cy+18);
+
+    // Play again button
+    ctx.fillStyle='rgba(99,102,241,0.9)';
+    roundRect(ctx, cx-80, cy+42, 160, 40, 50);
+    ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.font='bold 14px Outfit, sans-serif';
+    ctx.fillText('▶  Play Again', cx, cy+67);
+  }
+}
+
+function drawPipe(x, y, w, h, isTop){
+  // Main body gradient
+  const g = ctx.createLinearGradient(x,0,x+w,0);
+  g.addColorStop(0,'#1e1b4b');
+  g.addColorStop(0.4,'#3730a3');
+  g.addColorStop(1,'#1e1b4b');
+  ctx.fillStyle=g;
+  ctx.fillRect(x, y, w, h);
+
+  // Cap
+  const capH=14, capOff=5;
+  const capY = isTop ? y+h-capH : y;
+  ctx.fillStyle='#4338ca';
+  ctx.fillRect(x-capOff, capY, w+capOff*2, capH);
+
+  // Neon edge
+  ctx.strokeStyle='rgba(99,102,241,0.6)';
+  ctx.lineWidth=1.5;
+  ctx.strokeRect(x,y,w,h);
+
+  // Glow on cap
+  ctx.shadowColor='#6366f1';
+  ctx.shadowBlur=10;
+  ctx.strokeStyle='rgba(139,92,246,0.8)';
+  ctx.lineWidth=1;
+  ctx.strokeRect(x-capOff, capY, w+capOff*2, capH);
+  ctx.shadowBlur=0;
+}
+
+function drawRocket(x, y, angle){
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  // Glow
+  ctx.shadowColor='#818cf8';
+  ctx.shadowBlur=18;
+
+  // Flame
+  const fi = (Date.now()/60)%1;
+  const flameH = 16 + Math.sin(Date.now()/80)*4;
+  ctx.beginPath();
+  ctx.moveTo(-rocket.r+2, -3);
+  ctx.lineTo(-rocket.r-flameH, 0);
+  ctx.lineTo(-rocket.r+2, 3);
+  const fg=ctx.createLinearGradient(-rocket.r,-0,-rocket.r-flameH,0);
+  fg.addColorStop(0,'#fbbf24');
+  fg.addColorStop(0.5,'#f97316');
+  fg.addColorStop(1,'rgba(239,68,68,0)');
+  ctx.fillStyle=fg;
+  ctx.fill();
+
+  // Body
+  ctx.beginPath();
+  ctx.moveTo(rocket.r, 0);
+  ctx.lineTo(-rocket.r+4, -10);
+  ctx.lineTo(-rocket.r, -11);
+  ctx.lineTo(-rocket.r, 11);
+  ctx.lineTo(-rocket.r+4, 10);
+  ctx.closePath();
+  const bg=ctx.createLinearGradient(-rocket.r, 0, rocket.r, 0);
+  bg.addColorStop(0,'#3730a3');
+  bg.addColorStop(1,'#818cf8');
+  ctx.fillStyle=bg;
+  ctx.fill();
+
+  // Window
+  ctx.beginPath();
+  ctx.arc(0, 0, 5, 0, Math.PI*2);
+  ctx.fillStyle='#7dd3fc';
+  ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.4)';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+
+  ctx.shadowBlur=0;
+  ctx.restore();
+}
+
+function roundRect(c, x, y, w, h, r){
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.lineTo(x+w-r, y);
+  c.arcTo(x+w, y, x+w, y+r, r);
+  c.lineTo(x+w, y+h-r);
+  c.arcTo(x+w, y+h, x+w-r, y+h, r);
+  c.lineTo(x+r, y+h);
+  c.arcTo(x, y+h, x, y+h-r, r);
+  c.lineTo(x, y+r);
+  c.arcTo(x, y, x+r, y, r);
+  c.closePath();
+}
+
+// ── Game Loop ──
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

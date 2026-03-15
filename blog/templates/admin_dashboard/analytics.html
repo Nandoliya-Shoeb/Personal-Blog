@@ -87,9 +87,9 @@
     new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
-            labels: {{ category_labels| safe }},
+            labels: JSON.parse('{{ category_labels|escapejs }}'),
         datasets: [{
-            data: {{ category_counts| safe }},
+            data: JSON.parse('{{ category_counts|escapejs }}'),
         backgroundColor: [
             '#6366f1',
             '#ec4899',
@@ -116,10 +116,10 @@
     new Chart(postsCtx, {
         type: 'line',
         data: {
-            labels: {{ labels_month| safe }},
+            labels: JSON.parse('{{ labels_month|escapejs }}'),
         datasets: [{
             label: 'Posts',
-            data: {{ posts_by_month| safe }},
+            data: JSON.parse('{{ posts_by_month|escapejs }}'),
         borderColor: '#6366f1',
         backgroundColor: 'rgba(99, 102, 241, 0.1)',
         tension: 0.4,
@@ -152,10 +152,10 @@
     new Chart(commentsCtx, {
         type: 'line',
         data: {
-            labels: {{ labels_month| safe }},
+            labels: JSON.parse('{{ labels_month|escapejs }}'),
         datasets: [{
             label: 'Comments',
-            data: {{ comments_by_month| safe }},
+            data: JSON.parse('{{ comments_by_month|escapejs }}'),
         borderColor: '#ec4899',
         backgroundColor: 'rgba(236, 72, 153, 0.1)',
         tension: 0.4,
