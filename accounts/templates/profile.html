@@ -68,17 +68,11 @@
                     {{ form.last_name }}
                 </div>
 
-                <!-- Email Field -->
+                <!-- Email Field (Read-only) -->
                 <div class="form-group">
-                    <label for="{{ form.email.id_for_label }}">Email Address</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                    <div class="form-error">
-                        {% for error in form.email.errors %}
-                        <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                    <label>Email Address</label>
+                    <input type="email" class="form-input" value="{{ user.email }}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                    <small style="color: #6c757d;">Email cannot be changed after registration.</small>
                 </div>
 
                 <!-- Submit Button -->

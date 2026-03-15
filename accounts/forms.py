@@ -128,7 +128,7 @@ class UserProfileForm(forms.ModelForm):
     """Form for updating user profile"""
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email')
+        fields = ('first_name', 'last_name')
         widgets = {
             'first_name': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -138,15 +138,8 @@ class UserProfileForm(forms.ModelForm):
                 'class': 'form-input',
                 'placeholder': 'Last name'
             }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-input',
-                'placeholder': 'Email address',
-                'readonly': 'readonly'
-            })
         }
 
-    def clean_email(self):
-        return self.instance.email
 
 from .models import Profile
 
