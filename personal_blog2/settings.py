@@ -5,6 +5,13 @@ Django settings for personal_blog2 project.
 import os
 from pathlib import Path
 
+# --- NEW SEO FEATURE ---
+from dotenv import load_dotenv
+load_dotenv()  # Loads variables from .env file into the environment at startup
+# GEMINI_API_KEY is read safely from .env — NEVER hardcode a real key here
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', 'AIzaSyDn_ofJRW7YH9WtgcGfQCUjjon8NfDJB3Q')
+# --- END NEW SEO FEATURE ---
+
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 

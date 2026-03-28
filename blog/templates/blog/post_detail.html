@@ -4,175 +4,574 @@
 
 {% block content %}
 <div class="post-detail-container">
-    <!-- Post Header -->
-    <header class="post-header">
-        <!-- Post Image -->
-        {% if post.image %}
-            <div class="post-featured-image">
-                <img src="{{ post.image.url }}" alt="{{ post.title }}">
-            </div>
-        {% else %}
-            <div class="post-featured-image placeholder">
-                📄
-            </div>
-        {% endif %}
-
-        <!-- Post Title & Meta -->
-        <div class="post-header-content">
-            <nav class="breadcrumb">
-                <a href="{% url 'blog:post_list' %}">Blog</a>
-                {% if post.category %}
-                    <a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>
-                {% endif %}
-                <span>{{ post.title }}</span>
-            </nav>
-
-            <h1 class="post-title">{{ post.title }}</h1>
-
-            <!-- Post Meta Information -->
-            <div class="post-meta-info">
-                <div class="meta-left">
-                    <span class="author">
-                        👤 By <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
-                    </span>
-                    <span class="date">
-                        📅 {{ post.created_at|date:"F d, Y \a\t g:i A" }}
-                    </span>
-                    {% if post.updated_at != post.created_at %}
-                        <span class="updated">
-                            ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
-                        </span>
-                    {% endif %}
-                </div>
-
-                <div class="meta-right">
-                    <span class="views">👁️ {{ post.views_count }} views</span>
-                    <span class="comments">💬 {{ post.comments_count }} comments</span>
-                </div>
-            </div>
-
-            <!-- Post Actions (Edit/Delete for Author) -->
-            {% if can_edit or can_delete %}
-                <div class="post-actions">
-                    {% if can_edit %}
-                        <a href="{% url 'blog:edit_post' post.slug %}" class="btn btn-secondary">✏️ Edit Post</a>
-                    {% endif %}
-                    {% if can_delete %}
-                        <a href="{% url 'blog:delete_post' post.slug %}" class="btn btn-danger">🗑️ Delete Post</a>
-                    {% endif %}
-                </div>
-            {% endif %}
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <div class="post-main">
-        <!-- Post Content -->
-        <article class="post-body">
-            {{ post.content|linebreaks }}
-        </article>
-
-        <!-- Post Footer -->
-        <footer class="post-footer">
-            <div class="post-category-badge">
-                <span class="badge">📂 {{ post.category.name|default:"Uncategorized" }}</span>
-            </div>
-
-            <div class="post-author-card">
-                <h3>About the Author</h3>
-                <div class="author-info">
-                    <div class="author-avatar">👤</div>
-                    <div class="author-details">
-                        <h4>{{ post.author.get_full_name|default:post.author.username }}</h4>
-                        <p>{{ post.author.email }}</p>
-                        <p class="member-since">Member since {{ post.author.date_joined|date:"M Y" }}</p>
-                    </div>
-                </div>
-            </div>
-        </footer>
+  <!-- Post Header -->
+  <header class="post-header">
+    <!-- Post Image -->
+    {% if post.image %}
+    <div class="post-featured-image">
+      <img src="{{ post.image.url }}" alt="{{ post.title }}">
     </div>
+    {% else %}
+    <div class="post-featured-image placeholder">
+      📄
+    </div>
+    {% endif %}
 
-    <!-- Comments Section -->
-    <section class="comments-section">
-        <h2>💬 Comments ({{ post.comments_count }})</h2>
-
-        <!-- Add Comment Form -->
-        {% if user.is_authenticated %}
-            <div class="add-comment-form">
-                <h3>Leave a Comment</h3>
-                <form method="post" action="{% url 'blog:add_comment' post.slug %}">
-                    {% csrf_token %}
-                    {{ comment_form.content }}
-                    <button type="submit" class="btn btn-primary">Post Comment</button>
-                </form>
-            </div>
-        {% else %}
-            <div class="login-to-comment">
-                <p>Want to comment? <a href="{% url 'accounts:login' %}" class="link">Login here</a> or <a href="{% url 'accounts:register' %}" class="link">create an account</a></p>
-            </div>
+    <!-- Post Title & Meta -->
+    <div class="post-header-content">
+      <nav class="breadcrumb">
+        <a href="{% url 'blog:post_list' %}">Blog</a>
+        {% if post.category %}
+        <a href="{{ post.category.get_absolute_url }}">{{ post.category.name }}</a>
         {% endif %}
+        <span>{{ post.title }}</span>
+      </nav>
 
-        <!-- Comments List -->
-        {% if comments %}
-            <div class="comments-list">
-                {% for comment in comments %}
-                    <div class="comment">
-                        <div class="comment-header">
-                            <strong class="comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</strong>
-                            <span class="comment-date">{{ comment.created_at|date:"M d, Y \a\t g:i A" }}</span>
-                        </div>
-                        <div class="comment-content">
-                            {{ comment.content|linebreaks }}
-                        </div>
-                        
-                        <!-- Delete Comment Button (Author or Admin) -->
-                        {% if user == comment.author or user.is_staff %}
-                            <div class="comment-actions">
-                                <a href="{% url 'blog:delete_comment' comment.id %}" class="btn btn-small btn-danger">
-                                    Delete
-                                </a>
-                            </div>
+      <h1 class="post-title">{{ post.title }}</h1>
+
+      <!-- Post Meta Information -->
+      <div class="post-meta-info">
+        <div class="meta-left">
+                    <span class="author" style="display:flex; align-items:center; gap: 6px;">
+                        {% if post.author.profile.avatar %}
+                        <img src="{{ post.author.profile.avatar.url }}" alt="avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                        👤
+                        {% endif %}
+                        By <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                    </span>
+          <span class="date">
+            📅 {{ post.created_at|date:"F d, Y \a\t g:i A" }}
+          </span>
+          {% if post.updated_at != post.created_at %}
+          <span class="updated">
+            ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
+          </span>
+          {% endif %}
+        </div>
+
+        <div class="meta-right">
+          <span class="views">👁️ {{ post.views_count }} views</span>
+          <span class="comments">💬 {{ post.comments_count }} comments</span>
+        </div>
+      </div>
+
+      <!-- Post Actions (Edit/Delete for Author) -->
+      {% if can_edit or can_delete %}
+      <div class="post-actions">
+        {% if can_edit %}
+        <a href="{% url 'blog:edit_post' post.slug %}" class="btn btn-secondary">✏️ Edit Post</a>
+        {% endif %}
+        {% if can_delete %}
+        <a href="{% url 'blog:delete_post' post.slug %}" class="btn btn-danger">🗑️ Delete Post</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="post-main">
+    <!-- Post Content -->
+    <article class="post-body">
+      {{ post.content|linebreaks }}
+    </article>
+
+    <!-- Post Footer -->
+    <footer class="post-footer">
+      <div class="post-category-badge">
+        <span class="badge">📂 {{ post.category.name|default:"Uncategorized" }}</span>
+      </div>
+
+      <div class="post-author-card">
+        <h3>About the Author</h3>
+        <div class="author-info">
+                    <div class="author-avatar" style="width: 60px; height: 60px; overflow: hidden; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #e0e7ff; font-size: 2rem;">
+                        {% if post.author.profile.avatar %}
+                        <img src="{{ post.author.profile.avatar.url }}" alt="avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        👤
                         {% endif %}
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="empty-comments">
-                <p>No comments yet. Be the first to comment!</p>
-            </div>
-        {% endif %}
-    </section>
+          <div class="author-details">
+            <h4>{{ post.author.get_full_name|default:post.author.username }}</h4>
+            <p>{{ post.author.email }}</p>
+            <p class="member-since">Member since {{ post.author.date_joined|date:"M Y" }}</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
 
-    <!-- Related Posts -->
-    {% if post.category.posts.count > 1 %}
-        <section class="related-posts">
-            <h2>📚 More from {{ post.category.name }}</h2>
-            <div class="posts-grid">
-                {% for related_post in post.category.posts.all|slice:":3" %}
-                    {% if related_post.id != post.id %}
-                        <article class="post-card">
-                            {% if related_post.image %}
-                                <div class="post-image">
-                                    <img src="{{ related_post.image.url }}" alt="{{ related_post.title }}">
-                                </div>
-                            {% else %}
-                                <div class="post-image placeholder">📄</div>
-                            {% endif %}
-                            
-                            <div class="post-content">
-                                <h3 class="post-title">
-                                    <a href="{{ related_post.get_absolute_url }}">{{ related_post.title }}</a>
-                                </h3>
-                                <p class="post-excerpt">{{ related_post.short_content }}</p>
-                                <a href="{{ related_post.get_absolute_url }}" class="btn btn-small btn-primary">
-                                    Read More →
-                                </a>
-                            </div>
-                        </article>
-                    {% endif %}
-                {% endfor %}
-            </div>
-        </section>
+  <!-- Comments Section -->
+  <section class="comments-section">
+    <h2>💬 Comments ({{ post.comments_count }})</h2>
+
+    <!-- Add Comment Form -->
+    {% if user.is_authenticated %}
+    <div class="add-comment-form">
+      <h3>Leave a Comment</h3>
+      <form method="post" action="{% url 'blog:add_comment' post.slug %}">
+        {% csrf_token %}
+        {{ comment_form.content }}
+        <button type="submit" class="btn btn-primary">Post Comment</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="login-to-comment">
+      <p>Want to comment? <a href="{% url 'accounts:login' %}" class="link">Login here</a> or <a
+          href="{% url 'accounts:register' %}" class="link">create an account</a></p>
+    </div>
     {% endif %}
+
+    <!-- Comments List -->
+    {% if comments %}
+    <div class="comments-list">
+      {% for comment in comments %}
+      <div class="comment">
+        <div class="comment-header">
+          <strong class="comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+          <span class="comment-date">{{ comment.created_at|date:"M d, Y \a\t g:i A" }}</span>
+        </div>
+        <div class="comment-content">
+          {{ comment.content|linebreaks }}
+        </div>
+
+        <!-- Delete Comment Button (Author or Admin) -->
+        {% if user == comment.author or user.is_staff %}
+        <div class="comment-actions">
+          <a href="{% url 'blog:delete_comment' comment.id %}" class="btn btn-small btn-danger">
+            Delete
+          </a>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-comments">
+      <p>No comments yet. Be the first to comment!</p>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- Related Posts -->
+  {% if post.category.posts.count > 1 %}
+  <section class="related-posts">
+    <h2>📚 More from {{ post.category.name }}</h2>
+    <div class="posts-grid">
+      {% for related_post in post.category.posts.all|slice:":3" %}
+      {% if related_post.id != post.id %}
+      <article class="post-card">
+        {% if related_post.image %}
+        <div class="post-image">
+          <img src="{{ related_post.image.url }}" alt="{{ related_post.title }}">
+        </div>
+        {% else %}
+        <div class="post-image placeholder">📄</div>
+        {% endif %}
+
+        <div class="post-content">
+          <h3 class="post-title">
+            <a href="{{ related_post.get_absolute_url }}">{{ related_post.title }}</a>
+          </h3>
+          <p class="post-excerpt">{{ related_post.short_content }}</p>
+          <a href="{{ related_post.get_absolute_url }}" class="btn btn-small btn-primary">
+            Read More →
+          </a>
+        </div>
+      </article>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
 </div>
+
+<!-- PASTE BELOW THIS LINE -->
+<!-- ====================================================== -->
+<!-- --- NEW SEO FEATURE: Gemini AI SEO Suggestions --- -->
+<!-- ====================================================== -->
+{% if user.is_authenticated %}
+<div class="seo-widget-wrapper">
+  <div class="seo-widget-inner">
+    <p class="seo-widget-title">✨ AI-Powered SEO Assistant</p>
+    <!-- ✨ Trigger Button -->
+    <button id="seo-btn" class="seo-btn" data-post-id="{{ post.id }}">
+      <span class="seo-btn-icon">✨</span>
+      <span class="seo-btn-label">Get SEO Suggestions</span>
+    </button>
+
+    <!-- 🔄 Loading Spinner (hidden by default) -->
+    <div id="seo-loading" class="seo-loading" style="display:none;">
+      <div class="seo-spinner"></div>
+      <p class="seo-pulse-text">Analyzing your content with Gemini AI...</p>
+    </div>
+
+    <!-- ⚠️ Error State (hidden by default) -->
+    <div id="seo-error" class="seo-error-box" style="display:none;">
+      <span class="seo-error-icon">⚠️</span>
+      <span id="seo-error-msg"></span>
+    </div>
+
+    <!-- 🏆 Results Card (hidden by default) -->
+    <div id="seo-results" class="seo-results-card" style="display:none;">
+      <!-- SEO Titles Section -->
+      <div class="seo-section">
+        <h3 class="seo-section-heading">🏆 Suggested SEO Titles</h3>
+        <div id="seo-titles-list" class="seo-titles-list"></div>
+      </div>
+
+      <!-- SEO Tags Section -->
+      <div class="seo-section">
+        <h3 class="seo-section-heading">🏷️ Suggested Tags</h3>
+        <div id="seo-tags-list" class="seo-tags-grid"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- SEO Widget Styles (scoped, won't affect existing CSS)  -->
+<!-- ====================================================== -->
+<style>
+  /* === SEO WIDGET - MODERN REDESIGN === */
+  .seo-widget-wrapper {
+    max-width: 860px;
+    margin: 3rem auto 2rem;
+    padding: 0 1rem;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  .seo-widget-inner {
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    border-radius: 20px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .seo-widget-title {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    opacity: 0.7;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+  }
+
+  /* Button */
+  .seo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 2rem;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(102,126,234,0.5);
+    transition: all 0.3s ease;
+    letter-spacing: 0.02em;
+  }
+  .seo-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(102,126,234,0.7);
+    background: linear-gradient(135deg, #764ba2, #667eea);
+  }
+  .seo-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .seo-btn-icon { font-size: 1.2rem; }
+
+  /* Loading */
+  .seo-loading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #a78bfa;
+    font-size: 0.95rem;
+  }
+  .seo-spinner {
+    width: 22px; height: 22px;
+    border: 3px solid rgba(167,139,250,0.3);
+    border-top-color: #a78bfa;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .seo-pulse-text {
+    color: #c4b5fd;
+    margin: 0;
+    font-style: italic;
+  }
+
+  /* Error Box */
+  .seo-error-box {
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.4);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    color: #fca5a5;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .seo-error-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+
+  /* Results Card */
+  .seo-results-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    backdrop-filter: blur(10px);
+  }
+
+  /* Section Headings */
+  .seo-section { margin-bottom: 1.5rem; }
+  .seo-section-heading {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a78bfa;
+    margin: 0 0 0.8rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(167,139,250,0.2);
+  }
+
+  /* Title Items */
+  .seo-title-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+  }
+  .seo-title-text {
+    color: #e2e8f0;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    flex: 1;
+  }
+  .seo-copy-btn {
+    background: rgba(102,126,234,0.2);
+    border: 1px solid rgba(102,126,234,0.4);
+    color: #818cf8;
+    border-radius: 8px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .seo-copy-btn:hover {
+    background: rgba(102,126,234,0.4);
+    color: #fff;
+  }
+  .seo-copy-btn.copied {
+    background: rgba(16,185,129,0.2);
+    border-color: rgba(16,185,129,0.4);
+    color: #6ee7b7;
+  }
+
+  /* Tag Chips */
+  .seo-tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .seo-tag-chip {
+    padding: 0.35rem 0.9rem;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+  .seo-tag-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .seo-tag-chip.copied {
+    outline: 2px solid #6ee7b7;
+  }
+</style>
+
+<!-- ====================================================== -->
+<!-- SEO Widget JavaScript (Vanilla — no jQuery)            -->
+<!-- ====================================================== -->
+<script>
+  (function () {
+    /* ---- Pastel palette for tag chips ---- */
+    var PASTEL_COLORS = [
+      { bg: '#fce7f3', fg: '#9d174d' }, { bg: '#ede9fe', fg: '#5b21b6' },
+      { bg: '#dbeafe', fg: '#1e40af' }, { bg: '#dcfce7', fg: '#15803d' },
+      { bg: '#fef9c3', fg: '#92400e' }, { bg: '#fee2e2', fg: '#b91c1c' },
+      { bg: '#e0f2fe', fg: '#0369a1' }, { bg: '#f0fdf4', fg: '#166534' },
+      { bg: '#fdf4ff', fg: '#7e22ce' }, { bg: '#fff7ed', fg: '#c2410c' },
+    ];
+
+    /* ---- Read Django's CSRF token from cookies ---- */
+    function getCookie(name) {
+      var val = null;
+      document.cookie.split(';').forEach(function (c) {
+        var parts = c.trim().split('=');
+        if (parts[0] === name) val = decodeURIComponent(parts[1]);
+      });
+      return val;
+    }
+
+    /* ---- Copy text to clipboard with fallback ---- */
+    function copyText(text, btn) {
+      var original = btn.innerHTML;
+      function onSuccess() {
+        btn.innerHTML = '✅ Copied!';
+        btn.classList.add('copied');
+        setTimeout(function () {
+          btn.innerHTML = original;
+          btn.classList.remove('copied');
+        }, 2000);
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
+          fallbackCopy(text, onSuccess);
+        });
+      } else {
+        fallbackCopy(text, onSuccess);
+      }
+    }
+
+    function fallbackCopy(text, cb) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); cb(); } catch (e) { }
+      document.body.removeChild(ta);
+    }
+
+    /* ---- Main function called by the button ---- */
+    document.getElementById('seo-btn').addEventListener('click', function() {
+      var postId = this.getAttribute('data-post-id');
+      var btn = document.getElementById('seo-btn');
+      var loading = document.getElementById('seo-loading');
+      var errorBox = document.getElementById('seo-error');
+      var results = document.getElementById('seo-results');
+
+      /* Reset previous state */
+      errorBox.style.display = 'none';
+      results.style.display = 'none';
+      btn.disabled = true;
+
+      /* Show spinner */
+      loading.style.display = 'flex';
+
+      /* Build the POST request URL — blog app is mounted at /blog/ */
+      var url = '/blog/post/' + postId + '/seo-suggestions/';
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+      })
+        .then(function (resp) { return resp.json(); })
+        .then(function (data) {
+          loading.style.display = 'none';
+          btn.disabled = false;
+
+          if (!data.success) {
+            /* ---- Show Error ---- */
+            document.getElementById('seo-error-msg').textContent = data.error || 'Unknown error occurred.';
+            errorBox.style.display = 'flex';
+            return;
+          }
+
+          /* ---- Render SEO Titles ---- */
+          var titlesList = document.getElementById('seo-titles-list');
+          titlesList.innerHTML = '';
+          (data.seo_titles || []).forEach(function (title, i) {
+            var row = document.createElement('div');
+            row.className = 'seo-title-item';
+
+            var num = document.createElement('span');
+            num.className = 'seo-title-num';
+            num.textContent = i + 1;
+
+            var txt = document.createElement('span');
+            txt.className = 'seo-title-text';
+            txt.textContent = title;
+
+            var copyBtn = document.createElement('button');
+            copyBtn.className = 'seo-copy-btn';
+            copyBtn.innerHTML = '📋 Copy';
+            copyBtn.onclick = function () { copyText(title, copyBtn); };
+
+            row.appendChild(num);
+            row.appendChild(txt);
+            row.appendChild(copyBtn);
+            titlesList.appendChild(row);
+          });
+
+          /* ---- Render SEO Tags ---- */
+          var tagsList = document.getElementById('seo-tags-list');
+          tagsList.innerHTML = '';
+          (data.seo_tags || []).forEach(function (tag, i) {
+            var palette = PASTEL_COLORS[i % PASTEL_COLORS.length];
+            var chip = document.createElement('button');
+            chip.className = 'seo-tag-chip';
+            chip.textContent = tag;
+            chip.style.backgroundColor = palette.bg;
+            chip.style.color = palette.fg;
+            /* Stagger the entrance animation */
+            chip.style.animationDelay = (i * 50) + 'ms';
+            chip.title = 'Click to copy this tag';
+            chip.onclick = function () {
+              copyText(tag, chip);
+              chip.style.animation = 'none';
+              chip.offsetHeight; /* reflow trick to restart animation */
+              chip.style.animation = 'seoTagPulse 0.4s ease';
+            };
+            tagsList.appendChild(chip);
+          });
+
+          /* ---- Show results card ---- */
+          results.style.display = 'block';
+        })
+        .catch(function (err) {
+          loading.style.display = 'none';
+          btn.disabled = false;
+          document.getElementById('seo-error-msg').textContent = 'Network error: ' + err.message;
+          errorBox.style.display = 'flex';
+        });
+    });
+  })();
+</script>
+<!-- ====================================================== -->
+<!-- --- END NEW SEO FEATURE --- -->
+<!-- ====================================================== -->
+{% endif %}
+<!-- END PASTE -->
+
 {% endblock %}

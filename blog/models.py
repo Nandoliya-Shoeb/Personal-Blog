@@ -44,6 +44,13 @@ class Post(models.Model):
     # For tracking
     views_count = models.IntegerField(default=0)
 
+    # --- NEW SEO FEATURE ---
+    # Stores the best AI-generated SEO title for this post (optional)
+    seo_title = models.CharField(max_length=255, blank=True, null=True)
+    # Stores AI-generated SEO tags as a comma-separated string (optional)
+    seo_tags  = models.TextField(blank=True, null=True)
+    # --- END NEW SEO FEATURE ---
+
     class Meta:
         ordering = ['-created_at']
         indexes = [

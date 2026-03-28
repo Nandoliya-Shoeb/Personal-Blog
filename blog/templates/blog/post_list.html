@@ -87,8 +87,13 @@
 
                         <!-- Post Meta -->
                         <div class="post-meta">
-                            <span class="meta-item">
-                                👤 {{ post.author.get_full_name|default:post.author.username }}
+                            <span class="meta-item" style="display:flex; align-items:center;">
+                                {% if post.author.profile.avatar %}
+                                <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover; margin-right: 6px;">
+                                {% else %}
+                                <span style="margin-right: 6px;">👤</span>
+                                {% endif %}
+                                {{ post.author.get_full_name|default:post.author.username }}
                             </span>
                             <span class="meta-item">
                                 📅 {{ post.created_at|date:"M d, Y" }}

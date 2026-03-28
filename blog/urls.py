@@ -18,4 +18,8 @@ urlpatterns = [
     # Comment URLs
     path('post/<slug:slug>/comment/', views.add_comment, name='add_comment'),
     path('comment/<int:comment_id>/delete/', views.delete_comment, name='delete_comment'),
+
+    # --- NEW SEO FEATURE ---
+    path('post/<int:post_id>/seo-suggestions/', views.get_seo_suggestions, name='get_seo_suggestions'),
+    # --- END NEW SEO FEATURE ---
 ]

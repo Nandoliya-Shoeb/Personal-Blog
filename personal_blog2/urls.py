@@ -33,11 +33,13 @@ urlpatterns = [
 
     # Root redirect - login if not authenticated
     path('', account_views.login_view, name='home'),
-
-    # Catch-all: any unknown URL → custom 404 page (works even with DEBUG=True)
-    re_path(r'^.*$', custom_404),
 ]
 
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Catch-all: any unknown URL → custom 404 page (must be at the very end!)
+urlpatterns += [
+    re_path(r'^.*$', custom_404),
+]

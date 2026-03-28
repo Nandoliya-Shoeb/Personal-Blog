@@ -221,3 +221,103 @@ def my_posts(request):
         'total_posts': paginator.count,
     }
     return render(request, 'blog/my_posts.html', context)
+
+
+# ============================================
+# --- NEW SEO FEATURE ---
+# ============================================
+
+import json                                   # For parsing the JSON that Gemini returns
+from google import genai                      # Official Google Gemini SDK (google-genai)
+from django.conf import settings              # To securely read GEMINI_API_KEY
+from django.http import JsonResponse          # To send JSON back to the browser
+from django.views.decorators.http import require_POST  # Only allow POST requests
+
+
+@login_required(login_url='accounts:login')   # Must be logged in to use this feature
+@require_POST                                  # Must be a POST request (not a GET/browser visit)
+def get_seo_suggestions(request, post_id):
+    """
+    Sends the post's title and content to Google Gemini AI and returns
+    3 SEO title suggestions and 10 SEO tag suggestions as JSON.
+    """
+    try:
+        # --- Fetch the post from the database ---
+        # If post_id doesn't match any Post, return a clean error instead of crashing
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Post not found. Please check the post ID.'})
+
+        # --- Configure the Gemini client with our API key from settings ---
+        # The key is read from the .env file via settings.py — never hardcoded here
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        print("USING KEY:", settings.GEMINI_API_KEY[:10])
+
+        # --- Build the prompt ---
+        # We instruct Gemini to return ONLY JSON (no explanation, no markdown around it)
+        prompt = f"""You are an SEO expert. Analyze the following blog post and return ONLY a valid JSON object with no extra text, no markdown fences, and no explanation.
+
+Blog Post Title: {post.title}
+
+Blog Post Content:
+{post.content[:3000]}
+
+Return this exact JSON structure:
+{{
+  "seo_titles": ["title1", "title2", "title3"],
+  "seo_tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10"]
+}}
+
+Rules:
+- seo_titles: exactly 3 compelling, keyword-rich titles (under 60 chars each)
+- seo_tags: exactly 10 short, relevant SEO tags (1-3 words each)
+- Output ONLY the JSON object, nothing else"""
+
+        # --- Call Gemini API and get the response ---
+        # gemini-2.5-flash is fully supported free-tier for your new API key
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        response_text = response.text.strip()
+
+        # --- Strip markdown code fences if Gemini wrapped the JSON in them ---
+        # Gemini sometimes returns ```json ... ``` even when told not to
+        if response_text.startswith('```'):
+            # Remove the opening fence (e.g. ```json or ```)
+            response_text = response_text.split('\n', 1)[-1]
+        if response_text.endswith('```'):
+            # Remove the closing fence
+            response_text = response_text.rsplit('```', 1)[0]
+        response_text = response_text.strip()
+
+        # --- Parse the cleaned JSON string into a Python dict ---
+        data = json.loads(response_text)
+
+        seo_titles = data.get('seo_titles', [])
+        seo_tags   = data.get('seo_tags', [])
+
+        # --- Save the first suggested title and tags back to the post ---
+        # This lets us display them later without calling Gemini again
+        if seo_titles:
+            post.seo_title = seo_titles[0]
+        if seo_tags:
+            post.seo_tags = ', '.join(seo_tags)
+        post.save(update_fields=['seo_title', 'seo_tags'])
+
+        # --- Return success response to the browser ---
+        return JsonResponse({
+            'success': True,
+            'seo_titles': seo_titles,
+            'seo_tags': seo_tags,
+        })
+
+    except json.JSONDecodeError:
+        # Gemini returned something that wasn't valid JSON
+        return JsonResponse({'success': False, 'error': 'Gemini returned an unexpected format. Please try again.'})
+    except Exception as e:
+        # Catch-all: API key missing, network error, quota exceeded, etc.
+        return JsonResponse({'success': False, 'error': f'Error contacting Gemini AI: {str(e)}'})
+
+# --- END NEW SEO FEATURE ---
